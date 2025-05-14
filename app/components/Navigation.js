@@ -9,20 +9,17 @@ export default function Navigation() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check current user
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { data } = await supabase.auth.getUser()
+        setUser(data.user)
+      } catch (error) {
+        console.error('Error checking user:', error)
+      }
     }
     
     checkUser()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   const handleLogout = async () => {
@@ -32,16 +29,37 @@ export default function Navigation() {
 
   return (
     <nav className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link href="/" className="flex items-center px-2 py-2 text-gray-900 font-semibold">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between h-16 items-center">
+          <div className="flex space-x-8">
+            <Link href="/" className="font-semibold">
               Event Space App
             </Link>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link href="/venues" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-                Browse Venues
+            <Link href="/venues">Browse Venues</Link>
+            <Link href="/requests">Space Requests</Link>
+            {user && (
+              <>
+                <Link href="/venues/create">List Space</Link>
+                <Link href="/requests/create">Post Request</Link>
+              </>
+            )}
+          </div>
+          <div>
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link href="/auth/register" className="bg-blue-600 text-white px-4 py-2 rounded">
+                Sign Up
               </Link>
-              <Link href="/requests" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-                Space Requests
-              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  )
+}
